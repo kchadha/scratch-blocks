@@ -139,10 +139,24 @@ Blockly.Msg.PROCEDURE_ALREADY_EXISTS = 'A procedure named "%1" already exists.';
 // List creation
 /// button text - Text on the button used to launch the list creation dialogue.
 Blockly.Msg.NEW_LIST = 'Create list...';
+/// prompt - Prompts the user to enter the name for a new list
+Blockly.Msg.NEW_LIST_TITLE = 'New list name:';
+// TODO (#1245) Add new messages for list already exists (to be used only if
+// a variable of type list already exists... we want to be able to allow
+// renaming a list to the same name as an existing scalar variable or broadcast
+// message)
+
+// List renaming
+// TODO (#1248) Need to add Blockly.Msg.RENAME_LIST, similar to Blockly.Msg.RENAME_VARIABLE
+// if selected block is a variable of type list
+/// prompt - Prompts the user to enter the new name for the selected variable.  See [https://github.com/google/blockly/wiki/Variables#dropdown-menu https://github.com/google/blockly/wiki/Variables#dropdown-menu].\n\nParameters:\n* %1 - the name of the variable to be renamed.
+Blockly.Msg.RENAME_LIST_TITLE = 'Rename all "%1" lists to:';
 
 // Broadcast Message creation
 /// dropdown choice - Create a new message.
 Blockly.Msg.NEW_BROADCAST_MESSAGE = 'New message...';
+/// prompt - Prompts the user to enter the name for a new message
+Blockly.Msg.NEW_BROADCAST_MESSAGE_TITLE = 'New message name:';
 /// default broadcast message name
 /// (default option in broadcast message dropdown menus)
 Blockly.Msg.DEFAULT_BROADCAST_MESSAGE_NAME = 'message1';

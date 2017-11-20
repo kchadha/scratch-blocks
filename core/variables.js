@@ -177,12 +177,24 @@ Blockly.Variables.createVariable = function(workspace, opt_callback, opt_type) {
   // (opt_type above) of variable we are creating. If opt_type is not provided,
   // we should default to the original 'NEW_VARIABLE_TITLE' message for
   // scalar variables.
+  var newMsg = '';
+  if (opt_type === 'list') {
+    newMsg = Blockly.Msg.NEW_LIST_TITLE;
+  } else if (opt_type === 'broadcast_msg') {
+    newMsg = Blockly.Msg.NEW_MESSAGE_TITLE;
+  } else {
+    // Default to the original title for all other variable types
+    newMsg = Blockly.Msg.NEW_VARIABLE_TITLE;
+  }
   // This function needs to be named so it can be called recursively.
   var promptAndCheckWithAlert = function(defaultName) {
-    Blockly.Variables.promptName(Blockly.Msg.NEW_VARIABLE_TITLE, defaultName,
+    Blockly.Variables.promptName(newMsg, defaultName,
       function(text) {
         if (text) {
           if (workspace.getVariable(text)) {
+            // TODO (#1245) Also need to check if type is the same
+            // because we want to allow messages, lists, and variables to
+            // share names
             Blockly.alert(Blockly.Msg.VARIABLE_ALREADY_EXISTS.replace('%1',
                 text.toLowerCase()),
                 function() {
@@ -233,14 +245,24 @@ Blockly.Variables.renameVariable = function(workspace, variable,
   opt_callback) {
   // (karishma) TODO (#1244) Modal message should change depending on what type
   // of variable is getting renamed.
+  var renameMsg = '';
+  if(variable.type === 'list'){
+    renameMsg = Blockly.Msg.RENAME_LIST_TITLE;
+  } else {
+    // Shouldn't be able to call this function on a broadcast message
+    // Default to the original title for all other variable types
+    renameMsg = Blockly.Msg.RENAME_VARIABLE_TITLE;
+  }
   // This function needs to be named so it can be called recursively.
   var promptAndCheckWithAlert = function(defaultName) {
     Blockly.Variables.promptName(
-      Blockly.Msg.RENAME_VARIABLE_TITLE.replace('%1', variable.name), defaultName,
+      renameMsg.replace('%1', variable.name), defaultName,
       function(newName) {
         if (newName) {
           var newVariable = workspace.getVariable(newName);
           if (newVariable && newVariable.type != variable.type) {
+            // TODO (#1245) want to allow variables, lists, and broadcast
+            // messages to be able to share names
             Blockly.alert(Blockly.Msg.VARIABLE_ALREADY_EXISTS_FOR_ANOTHER_TYPE.replace('%1',
                 newName.toLowerCase()).replace('%2', newVariable.type),
                 function() {
