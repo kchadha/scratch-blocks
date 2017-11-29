@@ -63,15 +63,15 @@ Blockly.VariableMap.prototype.clear = function() {
  * Rename the given variable by updating its name in the variable map.
  * @param {?Blockly.VariableModel} variable Variable to rename.
  * @param {string} newName New variable name.
+ * @param {string=} opt_type The type of the variable to create if variable was
+ *     null.
  */
-Blockly.VariableMap.prototype.renameVariable = function(variable, newName) {
-  var newVariable = this.getVariable(newName);
+Blockly.VariableMap.prototype.renameVariable = function(variable, newName,
+    opt_type) {
+  var type = variable ? variable.type : (opt_type || '');
+  var newVariable = this.getVariable(newName, type);
   var variableIndex = -1;
   var newVariableIndex = -1;
-  var type = '';
-  if (variable || newVariable) {
-    type = (variable || newVariable).type;
-  }
 
   var variableList = this.getVariablesOfType(type);
   if (variable) {
@@ -115,25 +115,16 @@ Blockly.VariableMap.prototype.renameVariable = function(variable, newName) {
  *     a UUID.
  * @return {?Blockly.VariableModel} The newly created variable.
  */
-Blockly.VariableMap.prototype.createVariable = function(name, opt_type, opt_id) {
-  var variable = this.getVariable(name);
+Blockly.VariableMap.prototype.createVariable = function(name,
+    opt_type, opt_id) {
+  var variable = this.getVariable(name, opt_type);
   if (variable) {
-    if (opt_type && variable.type != opt_type) {
-      // TODO (#1245)
-      // We want to be able to create new broadcast messages that have the same
-      // name as variables or lists... and vice-versa
-      // also need to make sure that all the places where variables are looked
-      // up by name also do the right thing with their types...
-      throw Error('Variable "' + name + '" is already in use and its type is "'
-                  + variable.type + '" which conflicts with the passed in ' +
-                  'type, "' + opt_type + '".');
-    }
     if (opt_id && variable.getId() != opt_id) {
       throw Error('Variable "' + name + '" is already in use and its id is "'
                   + variable.getId() + '" which conflicts with the passed in ' +
                   'id, "' + opt_id + '".');
     }
-    // The variable already exists and has the same id and type.
+    // The variable already exists and has the same ID.
     return variable;
   }
   if (opt_id && this.getVariableById(opt_id)) {
@@ -169,17 +160,19 @@ Blockly.VariableMap.prototype.deleteVariable = function(variable) {
 };
 
 /**
- * Find the variable by the given name and return it. Return null if it is not
- *     found.
- * @param {!string} name The name to check for.
- * @return {?Blockly.VariableModel} The variable with the given name, or null if
+ * Find the variable by the given name and type and return it.  Return null if
+ *     it is not found.
+ * @param {string} name The name to check for.
+ * @param {string=} opt_type The type of the variable.  If not provided it
+ *     defaults to the empty string, which is a specific type.
+ * @return {Blockly.VariableModel} The variable with the given name, or null if
  *     it was not found.
  */
-Blockly.VariableMap.prototype.getVariable = function(name) {
-  var keys = Object.keys(this.variableMap_);
-  for (var i = 0; i < keys.length; i++ ) {
-    var key = keys[i];
-    for (var j = 0, variable; variable = this.variableMap_[key][j]; j++) {
+Blockly.VariableMap.prototype.getVariable = function(name, opt_type) {
+  var type = opt_type || '';
+  var list = this.variableMap_[type];
+  if (list) {
+    for (var j = 0, variable; variable = list[j]; j++) {
       if (Blockly.Names.equals(variable.name, name)) {
         return variable;
       }

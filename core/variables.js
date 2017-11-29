@@ -68,6 +68,7 @@ Blockly.Variables.allUsedVariables = function(root) {
   var variableHash = Object.create(null);
   // Iterate through every block and add each variable to the hash.
   for (var x = 0; x < blocks.length; x++) {
+    // TODO (#1199) Switch to IDs.
     var blockVariables = blocks[x].getVars();
     if (blockVariables) {
       for (var y = 0; y < blockVariables.length; y++) {
@@ -188,9 +189,7 @@ Blockly.Variables.createVariable = function(workspace, opt_callback, opt_type) {
     Blockly.Variables.promptName(newMsg, defaultName,
       function(text) {
         if (text) {
-          // TODO (#1245) use separate namespaces for lists, variables, and
-          // broadcast messages
-          if (workspace.getVariable(text)) {
+          if (workspace.getVariable(text, opt_type)) {
             Blockly.alert(Blockly.Msg.VARIABLE_ALREADY_EXISTS.replace('%1',
                 text.toLowerCase()),
                 function() {
@@ -232,7 +231,7 @@ Blockly.Variables.createVariable = function(workspace, opt_callback, opt_type) {
  * Rename a variable with the given workspace, variableType, and oldName.
  * @param {!Blockly.Workspace} workspace The workspace on which to rename the
  *     variable.
- * @param {?Blockly.VariableModel} variable Variable to rename.
+ * @param {Blockly.VariableModel} variable Variable to rename.
  * @param {function(?string=)=} opt_callback A callback. It will
  *     be passed an acceptable new variable name, or null if change is to be
  *     aborted (cancel button), or undefined if an existing variable was chosen.
@@ -247,28 +246,9 @@ Blockly.Variables.renameVariable = function(workspace, variable,
       Blockly.Msg.RENAME_VARIABLE_TITLE.replace('%1', variable.name), defaultName,
       function(newName) {
         if (newName) {
-          var newVariable = workspace.getVariable(newName);
-          // TODO (#1245) use separate namespaces for lists, variables, and
-          // broadcast messages
-          if (newVariable && newVariable.type != variable.type) {
-            Blockly.alert(Blockly.Msg.VARIABLE_ALREADY_EXISTS_FOR_ANOTHER_TYPE.replace('%1',
-                newName.toLowerCase()).replace('%2', newVariable.type),
-                function() {
-                  promptAndCheckWithAlert(newName);  // Recurse
-                });
-          }
-          else if (!Blockly.Procedures.isNameUsed(newName, workspace)) {
-            Blockly.alert(Blockly.Msg.PROCEDURE_ALREADY_EXISTS.replace('%1',
-                newName.toLowerCase()),
-                function() {
-                  promptAndCheckWithAlert(newName);  // Recurse
-                });
-          }
-          else {
-            workspace.renameVariable(variable.name, newName);
-            if (opt_callback) {
-              opt_callback(newName);
-            }
+          workspace.renameVariableById(variable.getId(), newName);
+          if (opt_callback) {
+            opt_callback(newName);
           }
         } else {
           // User canceled prompt without a value.
@@ -316,12 +296,12 @@ Blockly.Variables.promptName = function(promptText, defaultText, callback) {
 Blockly.Variables.generateVariableFieldXml_ = function(variableModel, opt_name) {
   // The variable name may be user input, so it may contain characters that need
   // to be escaped to create valid XML.
-  var element = goog.dom.createDom('field');
-  element.setAttribute('name', opt_name || 'VARIABLE');
-  element.setAttribute('variabletype', variableModel.type);
-  element.setAttribute('id', variableModel.getId());
-  element.textContent = variableModel.name;
-
-  var xmlString = Blockly.Xml.domToText(element);
-  return xmlString;
+  var typeString = variableModel.type;
+  if (typeString == '') {
+    typeString = '\'\'';
+  }
+  var text = '<field name="VAR" id="' + variableModel.getId() +
+    '" variabletype="' + typeString +
+    '">' + variableModel.name + '</field>';
+  return text;
 };

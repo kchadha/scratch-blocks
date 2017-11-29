@@ -87,6 +87,72 @@ Blockly.Xml.blockToDomWithXY = function(block, opt_noId) {
   return element;
 };
 
+Blockly.Xml.fieldToDomVariable_ = function(field, workspace) {
+  var id = field.getValue();
+  var variable = workspace.getVariableById(id);
+  if (!variable) {
+    if (workspace.isFlyout && workspace.targetWorkspace) {
+      var potentialVariableMap =
+          workspace.targetWorkspace.potentialVariableMap_;
+      if (potentialVariableMap) {
+        variable = potentialVariableMap.getVariableById(id);
+      }
+    }
+  }
+  if (variable) {
+    var container = goog.dom.createDom('field', null, variable.name);
+    container.setAttribute('name', field.name);
+    container.setAttribute('id', variable.getId());
+    container.setAttribute('variabletype', variable.type);
+    return container;
+  } else {
+    // something went wrong?
+    console.log('no variable in fieldtodom');
+    return null;
+  }
+};
+
+/**
+ * Encode a field as XML.
+ * @param {!Blockly.Field} field The field to encode.
+ * @param {!Blockly.Workspace} workspace The workspace that the field is in.
+ * @return {?Element} XML element, or null if the field did not need to be
+ *     serialized.
+ * @private
+ */
+Blockly.Xml.fieldToDom_ = function(field, workspace) {
+  if (field.name && field.EDITABLE) {
+    if (field instanceof Blockly.FieldVariable) {
+      return Blockly.Xml.fieldToDomVariable_(field, workspace);
+    } else {
+      var container = goog.dom.createDom('field', null, field.getValue());
+      container.setAttribute('name', field.name);
+      return container;
+    }
+  }
+  return null;
+};
+
+/**
+ * Encode all of a block's fields as XML and attach them to the given tree of
+ * XML elements.
+ * @param {!Blockly.Block} block A block with fields to be encoded.
+ * @param {!Element} element The XML element to which the field DOM should be
+ *     attached.
+ * @private
+ */
+Blockly.Xml.allFieldsToDom_ = function(block, element) {
+  var workspace = block.workspace;
+  for (var i = 0, input; input = block.inputList[i]; i++) {
+    for (var j = 0, field; field = input.fieldRow[j]; j++) {
+      var fieldDom = Blockly.Xml.fieldToDom_(field, workspace);
+      if (fieldDom) {
+        element.appendChild(fieldDom);
+      }
+    }
+  }
+};
+
 /**
  * Encode a block subtree as XML.
  * @param {!Blockly.Block} block The root block to encode.
@@ -407,7 +473,6 @@ Blockly.Xml.domToWorkspace = function(xml, workspace) {
     }
     Blockly.Field.stopCache();
   }
-  workspace.updateVariableStore(false);
   // Re-enable workspace resizing.
   if (workspace.setResizesEnabled) {
     workspace.setResizesEnabled(true);
@@ -735,6 +800,55 @@ Blockly.Xml.domToBlockHeadless_ = function(xmlBlock, workspace) {
     block.setShadow(true);
   }
   return block;
+};
+
+Blockly.Xml.domToFieldVariable_ = function(workspace, xml, text, field) {
+  // TODO (#1199): When we change setValue and getValue to
+  // interact with IDs instead of names, update this so that we get
+  // the variable based on ID instead of textContent.
+  var type = xml.getAttribute('variabletype') || '';
+  if (type == '\'\'') {
+    type = '';
+  }
+  // TODO: Consider using a different name (var_id?) because this is the
+  // node's ID.
+  var id = xml.id;
+  var variable = Blockly.FieldVariable.getOrCreateVariable(workspace, text,
+      type, id);
+
+  // This should never happen :)
+  if (type != null && type !== variable.type) {
+    throw Error('Serialized variable type with id \'' +
+      variable.getId() + '\' had type ' + variable.type + ', and ' +
+      'does not match variable field that references it: ' +
+      Blockly.Xml.domToText(xml) + '.');
+  }
+
+  field.setValue(variable.getId());
+};
+
+/**
+ * Decode an XML field tag and set the value of that field on the given block.
+ * @param {!Blockly.Block} block The block that is currently being deserialized.
+ * @param {string} fieldName The name of the field on the block.
+ * @param {!Element} xml The field tag to decode.
+ * @private
+ */
+Blockly.Xml.domToField_ = function(block, fieldName, xml) {
+  var field = block.getField(fieldName);
+  if (!field) {
+    console.warn('Ignoring non-existent field ' + fieldName + ' in block ' +
+                 block.type);
+    return;
+  }
+
+  var workspace = block.workspace;
+  var text = xml.textContent;
+  if (field instanceof Blockly.FieldVariable) {
+    Blockly.Xml.domToFieldVariable_(workspace, xml, text, field);
+  } else {
+    field.setValue(text);
+  }
 };
 
 /**

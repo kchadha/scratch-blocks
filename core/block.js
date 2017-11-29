@@ -830,6 +830,27 @@ Blockly.Block.prototype.getVars = function() {
 };
 
 /**
+ * Return all variables referenced by this block.
+ * @return {!Array.<!Blockly.VariableModel>} List of variable models.
+ */
+Blockly.Block.prototype.getVarModels = function() {
+  var vars = [];
+  for (var i = 0, input; input = this.inputList[i]; i++) {
+    for (var j = 0, field; field = input.fieldRow[j]; j++) {
+      if (field instanceof Blockly.FieldVariable) {
+        // TODO (#1199): When we switch to tracking variables by ID,
+        // update this.
+        var model = this.workspace.getVariableById(field.getValue());
+        if (model) {
+          vars.push(model);
+        }
+      }
+    }
+  }
+  return vars;
+};
+
+/**
  * Notification that a variable is renaming.
  * If the name matches one of this block's variables, rename it.
  * @param {string} oldName Previous name of variable.
@@ -842,6 +863,24 @@ Blockly.Block.prototype.renameVar = function(oldName, newName) {
           field instanceof Blockly.FieldVariableGetter) &&
           Blockly.Names.equals(oldName, field.getValue())) {
         field.setValue(newName);
+      }
+    }
+  }
+};
+
+/**
+ * Notification that a variable is renaming.
+ * If the name matches one of this block's variables, rename it.
+ * @param {string} oldId ID of variable to rename.
+ * @param {string} newId ID of new variable.  May be the same as oldId, but with
+ *     an updated name.
+ */
+Blockly.Block.prototype.renameVarById = function(oldId, newId) {
+  for (var i = 0, input; input = this.inputList[i]; i++) {
+    for (var j = 0, field; field = input.fieldRow[j]; j++) {
+      if (field instanceof Blockly.FieldVariable &&
+          oldId == field.getValue()) {
+        field.setValue(newId);
       }
     }
   }
