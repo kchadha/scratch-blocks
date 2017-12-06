@@ -213,7 +213,7 @@ Blockly.Variables.createVariable = function(workspace, opt_callback, opt_type) {
             }
 
             if (opt_callback) {
-              opt_callback(text);
+              opt_callback(variableBlockId);
             }
           }
         } else {
@@ -300,7 +300,8 @@ Blockly.Variables.generateVariableFieldXml_ = function(variableModel, opt_name) 
   if (typeString == '') {
     typeString = '\'\'';
   }
-  var text = '<field name="VAR" id="' + variableModel.getId() +
+  var fieldName = opt_name | "VARIABLE";
+  var text = '<field name="' + fieldName + ' id="' + variableModel.getId() +
     '" variabletype="' + typeString +
     '">' + variableModel.name + '</field>';
   return text;

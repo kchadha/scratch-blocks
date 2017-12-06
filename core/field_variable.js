@@ -131,8 +131,16 @@ Blockly.FieldVariable.prototype.initModel = function() {
     return; // Initialization already happened.
   }
   this.workspace_ = this.sourceBlock_.workspace;
-  var variable = Blockly.FieldVariable.getOrCreateVariable(
-      this.workspace_, this.defaultVariableName, this.defaultType_, null);
+  var variable = null;
+  var varTypes = this.getVariableTypes_();
+  if(varTypes.length == 1){
+    var variableType = varTypes[0];
+    variable = Blockly.FieldVariable.getOrCreateVariable(
+        this.workspace_, this.defaultVariableName, variableType, null);
+  } else {
+    variable = Blockly.FieldVariable.getOrCreateVariable(
+        this.workspace_, this.defaultVariableName, this.defaultType_, null);
+  }
   this.setValue(variable.getId());
 };
 
@@ -323,9 +331,12 @@ Blockly.FieldVariable.prototype.onItemSelected = function(menu, menuItem) {
       workspace.deleteVariableById(this.variable_.getId());
       return;
     } else if (id == Blockly.NEW_BROADCAST_MESSAGE_ID) {
+      // If this menu item has been selected from the workspace, create
+      // the new variable on the target workspace instead of the flyout
+      workspace = workspace.isFlyout ? workspace.targetWorkspace : workspace;
       var thisField = this;
-      var setName = function(newName) {
-        thisField.setValue(newName);
+      var setName = function(varId) {
+        thisField.setValue(varId);
       };
       Blockly.Variables.createVariable(workspace, setName, Blockly.BROADCAST_MESSAGE_VARIABLE_TYPE);
       return;
