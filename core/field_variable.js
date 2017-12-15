@@ -54,6 +54,11 @@ Blockly.FieldVariable = function(varname, opt_validator, opt_variableTypes) {
 };
 goog.inherits(Blockly.FieldVariable, Blockly.FieldDropdown);
 
+Blockly.FieldVariable.prototype.isBroadcastType_ = function() {
+  return this.variableTypes && this.variableTypes.length == 1 &&
+    this.variableTypes[0] == Blockly.BROADCAST_MESSAGE_VARIABLE_TYPE;
+}
+
 /**
  * Install this dropdown on a block.
  */
@@ -69,7 +74,7 @@ Blockly.FieldVariable.prototype.init = function() {
 };
 
 Blockly.FieldVariable.prototype.initModel = function() {
-  if (!this.getValue()) {
+  if (!this.getValue() && !this.isBroadcastType_()) { // broadcast messages can have empty string (e.g. when loading an sb2 project...)
     // Variables without names get uniquely named for this workspace.
     var workspace =
         this.sourceBlock_.isInFlyout ?
