@@ -223,7 +223,6 @@ Blockly.FieldVariable.dropdownCreate = function() {
   if (this.sourceBlock_) {
     workspace = this.sourceBlock_.workspace;
   }
-  var isBroadcastType = false;
   if (workspace) {
     var variableTypes = this.getVariableTypes_();
     var variableModelList = [];
@@ -231,13 +230,15 @@ Blockly.FieldVariable.dropdownCreate = function() {
     // doesn't modify the workspace's list.
     for (var i = 0; i < variableTypes.length; i++) {
       var variableType = variableTypes[i];
-      if (variableType == Blockly.BROADCAST_MESSAGE_VARIABLE_TYPE){
-        isBroadcastType = true;
-      }
       var variables = workspace.getVariablesOfType(variableType);
       variableModelList = variableModelList.concat(variables);
+
+      var potentialVarMap = workspace.getPotentialVariableMap();
+      if (potentialVarMap) {
+        var potentialVars = potentialVarMap.getVariablesOfType(variableType);
+        variableModelList = variableModelList.concat(potentialVars);
+      }
     }
-    // TODO (#1270): Ensure flyout broadcast messages are fixed.
   }
   variableModelList.sort(Blockly.VariableModel.compareByName);
 
@@ -246,11 +247,8 @@ Blockly.FieldVariable.dropdownCreate = function() {
     // Set the uuid as the internal representation of the variable.
     options[i] = [variableModelList[i].name, variableModelList[i].getId()];
   }
-  if (isBroadcastType) {
-    // TODO (#1270): Re-enable create broadcast message dropdown in flyout when fixed.
-    if (!workspace.isFlyout) {
-      options.push([Blockly.Msg.NEW_BROADCAST_MESSAGE, Blockly.NEW_BROADCAST_MESSAGE_ID]);
-    }
+  if (this.defaultType_ == Blockly.BROADCAST_MESSAGE_VARIABLE_TYPE) {
+    options.push([Blockly.Msg.NEW_BROADCAST_MESSAGE, Blockly.NEW_BROADCAST_MESSAGE_ID]);
   } else {
     options.push([Blockly.Msg.RENAME_VARIABLE, Blockly.RENAME_VARIABLE_ID]);
     if (Blockly.Msg.DELETE_VARIABLE) {
@@ -283,12 +281,12 @@ Blockly.FieldVariable.prototype.onItemSelected = function(menu, menuItem) {
       return;
     } else if (id == Blockly.NEW_BROADCAST_MESSAGE_ID) {
       var thisField = this;
-      var setName = function(newName) {
-        if (newName) {
-          thisField.setValue(newName);
+      var updateField = function(varId) {
+        if (varId) {
+          thisField.setValue(varId);
         }
       };
-      Blockly.Variables.createVariable(workspace, setName, Blockly.BROADCAST_MESSAGE_VARIABLE_TYPE);
+      Blockly.Variables.createVariable(workspace, updateField, Blockly.BROADCAST_MESSAGE_VARIABLE_TYPE);
       return;
     }
 
