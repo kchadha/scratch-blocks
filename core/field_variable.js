@@ -251,9 +251,9 @@ Blockly.FieldVariable.dropdownCreate = function() {
   }
   if (this.defaultType_ == Blockly.BROADCAST_MESSAGE_VARIABLE_TYPE) {
     // TODO (#1270) Re-enable new message option in flyout when flyout behavior is fixed
-    if (!workspace.isFlyout){
-      options.push([Blockly.Msg.NEW_BROADCAST_MESSAGE, Blockly.NEW_BROADCAST_MESSAGE_ID]);
-    }
+    //if (!workspace.isFlyout){
+    options.push([Blockly.Msg.NEW_BROADCAST_MESSAGE, Blockly.NEW_BROADCAST_MESSAGE_ID]);
+    //}
   } else {
     options.push([Blockly.Msg.RENAME_VARIABLE, Blockly.RENAME_VARIABLE_ID]);
     if (Blockly.Msg.DELETE_VARIABLE) {
@@ -287,7 +287,7 @@ Blockly.FieldVariable.prototype.onItemSelected = function(menu, menuItem) {
     } else if (id == Blockly.NEW_BROADCAST_MESSAGE_ID) {
       var thisField = this;
       var updateField = function(varId) {
-        if (varId) {
+        if (varId && !(thisField.getValue() == varId)) {
           thisField.setValue(varId);
         }
       };

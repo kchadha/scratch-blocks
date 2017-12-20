@@ -205,7 +205,26 @@ Blockly.Variables.createVariable = function(workspace, opt_callback, opt_type) {
                 });
           }
           else {
-            var variable = workspace.createVariable(text, opt_type);
+            var potentialVarMap = workspace.getPotentialVariableMap();
+            var potentialVar = null;
+            var sharesNameWithPotentialVar = false;
+            if (potentialVarMap && opt_type) {
+              var potentialVars = potentialVarMap.getVariablesOfType(opt_type);
+              for (var i=0, potentialVar = potentialVars[i];
+                i < potentialVars.length; i++) {
+                if (text == potentialVar.name && opt_type &&
+                    opt_type == potentialVar.type) {
+                  sharesNameWithPotentialVar = true;
+                  break;
+                }
+              }
+            }
+            if (sharesNameWithPotentialVar) {
+              var variable = Blockly.Variables.getOrCreateVariable(
+                workspace.targetWorkspace, potentialVar.getId(), text, opt_type);
+            } else {
+              var variable = workspace.createVariable(text, opt_type);
+            }
 
             var flyout = workspace.isFlyout ? workspace : workspace.getFlyout();
             var variableBlockId = variable.getId();
