@@ -6,7 +6,6 @@
 /.github
 /.travis.yml
 /.tx
-/tests
 
 # Localization / I18N
 common.pyc
