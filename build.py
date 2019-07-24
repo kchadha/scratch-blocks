@@ -249,6 +249,8 @@ class Gen_compressed(threading.Thread):
 
       # local will filter this out
       ("use_closure_library", "true"),
+      ("debug", "true"),
+      ("formatting", "PRETTY_PRINT")
     ]
 
     # Read in all the source files.
@@ -279,6 +281,8 @@ class Gen_compressed(threading.Thread):
     # Define the parameters for the POST request.
     params = [
       ("compilation_level", "SIMPLE"),
+      ("debug", "true"),
+      ("formatting", "PRETTY_PRINT")
     ]
 
     # Read in all the source files.
@@ -287,7 +291,7 @@ class Gen_compressed(threading.Thread):
     # Add Blockly.Colours for use of centralized colour bank
     filenames.append(os.path.join("core", "colours.js"))
     filenames.append(os.path.join("core", "constants.js"))
-    
+
     for filename in filenames:
       # Append filenames as false arguments the step before compiling will
       # either transform them into arguments for local or remote compilation
